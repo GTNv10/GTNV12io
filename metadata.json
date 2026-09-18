@@ -1,0 +1,6 @@
+{
+  "name": "GTN v12 - Gestor de Registros",
+  "description": "Aplicación web pura en HTML, CSS y JS sin backend para gestión de expedientes, listas ordenadas A-Z, actualización automática y generación de documentos.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
