@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let pendingPDFGeneration = null;
     let searchDebounceTimer;
     let activeDbSectionKey = null;
+    let activeDbTab = 'config';
     
     let currentPage = 1;
 
@@ -64,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         elements.templateModal.innerHTML = `<div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto"><h3 id="modal-title" class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Crear/Editar Plantilla</h3><div class="space-y-6"><input type="hidden" id="template-id"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="template-name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Nombre</label><input type="text" id="template-name" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="Ej: Notificación de Vencimiento"></div><div><label for="template-font" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Tipo de Letra (PDF)</label><select id="template-font" class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200"><option value="Helvetica">Helvetica (Normal)</option><option value="Times">Times (Serif)</option><option value="Courier">Courier (Monoespaciada)</option></select></div></div><div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Variables (clic para insertar)</label><div id="placeholders-container" class="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border dark:border-gray-600 min-h-[60px]"></div></div><div><label for="manual-field-input" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Añadir Campo de Pregunta (Manual)</label><div class="flex gap-2"><input type="text" id="manual-field-input" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="Nombre del campo, ej: Fecha de Notificación"><button id="add-manual-field-btn" type="button" class="bg-purple-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-purple-600 text-nowrap">Añadir</button></div></div><div><label for="template-content" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Contenido</label><div class="flex items-center gap-2 mb-2"><button id="format-bold-btn" type="button" class="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 px-3 py-1 rounded-md text-sm font-bold hover:bg-gray-300 dark:hover:bg-gray-500" title="Negrita">B</button><button id="format-italic-btn" type="button" class="bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-100 px-3 py-1 rounded-md text-sm italic hover:bg-gray-300 dark:hover:bg-gray-500" title="Cursiva">C</button></div><textarea id="template-content" rows="12" class="w-full p-4 border border-gray-300 dark:border-gray-600 rounded-lg font-mono text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200" placeholder="Escribe aquí... Usa {{Variable}} para insertar datos."></textarea></div></div><div class="mt-8 flex justify-end space-x-3"><button id="cancel-template-btn" class="bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 font-bold py-3 px-6 rounded-lg">Cancelar</button><button id="save-template-btn" class="bg-sky-600 text-white font-bold py-3 px-6 rounded-lg">Guardar</button></div></div>`;
         elements.manualVarsModal.innerHTML = `<div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto"><h3 class="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">Completar Datos Manuales</h3><form id="manual-vars-form" class="space-y-4"></form><div class="mt-8 flex justify-end space-x-3"><button id="cancel-manual-vars-btn" class="bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 font-bold py-3 px-6 rounded-lg">Cancelar</button><button id="submit-manual-vars-btn" class="bg-sky-600 text-white font-bold py-3 px-6 rounded-lg">Continuar</button></div></div>`;
-        elements.previewModal.innerHTML = `<div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto"><h3 class="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">Previsualizar y Generar PDF</h3><pre id="preview-text" class="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-200 max-h-72 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-4 rounded border dark:border-gray-600 font-sans leading-relaxed"></pre><div class="mt-8 flex justify-end space-x-3"><button id="cancel-preview-btn" class="bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 font-bold py-3 px-6 rounded-lg">Cancelar</button><button id="download-pdf-btn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg">Descargar PDF</button></div></div>`;
+        elements.previewModal.innerHTML = `<div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto"><h3 class="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">Previsualizar y Generar PDF</h3><pre id="preview-text" class="whitespace-pre-wrap text-sm max-h-72 overflow-y-auto bg-white text-gray-900 p-4 rounded border border-gray-300 font-sans leading-relaxed" style="background-color:#ffffff;color:#111827;"></pre><div class="mt-8 flex justify-end space-x-3"><button id="cancel-preview-btn" class="bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 font-bold py-3 px-6 rounded-lg">Cancelar</button><button id="download-pdf-btn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg">Descargar PDF</button></div></div>`;
         
         elements.dbModal.innerHTML = `<div class="modal-content bg-white dark:bg-gray-800 w-screen h-screen max-w-none max-h-none rounded-none shadow-2xl p-6 flex flex-col"><div class="flex justify-between items-center mb-4 pb-4 border-b dark:border-gray-700"><h3 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Gestionar Bases de Datos y Ajustes</h3><div class="flex items-center gap-4"><button id="export-db-btn" class="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600">Exportar BD (JSON)</button><button id="close-db-btn" class="text-4xl text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400">&times;</button></div></div><div id="db-tables-container" class="flex-grow overflow-y-auto pr-4 grid grid-cols-1 lg:grid-cols-2 gap-8"></div></div>`;
         
@@ -1971,6 +1972,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderDbTables() {
         const dbTablesContainer = document.getElementById('db-tables-container');
         dbTablesContainer.innerHTML = '';
+        dbTablesContainer.className = 'flex-grow overflow-y-auto pr-4';
 
         const createSection = (title, dbKey = null) => {
             const section = document.createElement('div');
@@ -2406,7 +2408,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 Array.from(section.children).slice(1).forEach(child => child.classList.add('hidden'));
             });
         });
-        dbTablesContainer.appendChild(leftCol); dbTablesContainer.appendChild(rightCol);
+
+        const tabs = document.createElement('div');
+        tabs.className = 'flex gap-2 mb-4 border-b border-gray-200 dark:border-gray-700';
+        const panels = document.createElement('div');
+        panels.className = 'grid grid-cols-1 lg:grid-cols-2 gap-8';
+        panels.appendChild(leftCol);
+        panels.appendChild(rightCol);
+
+        [['config', 'Configuración y listas'], ['lookup', 'VLOOKUP y datos']].forEach(([tabKey, label]) => {
+            const tabButton = document.createElement('button');
+            tabButton.type = 'button';
+            tabButton.className = `px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${activeDbTab === tabKey ? 'border-sky-600 text-sky-600 dark:text-sky-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`;
+            tabButton.textContent = label;
+            tabButton.setAttribute('aria-selected', String(activeDbTab === tabKey));
+            tabButton.onclick = () => {
+                activeDbTab = tabKey;
+                leftCol.classList.toggle('hidden', activeDbTab !== 'config');
+                rightCol.classList.toggle('hidden', activeDbTab !== 'lookup');
+                tabs.querySelectorAll('button').forEach(button => {
+                    const selected = button === tabButton;
+                    button.setAttribute('aria-selected', String(selected));
+                    button.className = `px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${selected ? 'border-sky-600 text-sky-600 dark:text-sky-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`;
+                });
+            };
+            tabs.appendChild(tabButton);
+        });
+
+        leftCol.classList.toggle('hidden', activeDbTab !== 'config');
+        rightCol.classList.toggle('hidden', activeDbTab !== 'lookup');
+        dbTablesContainer.appendChild(tabs);
+        dbTablesContainer.appendChild(panels);
     }
 
     function addLookupRelation() {
@@ -2816,6 +2848,14 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.previewModal.addEventListener('click', (e) => {
             if (e.target.id === 'download-pdf-btn') downloadPDF();
             if (e.target.id === 'cancel-preview-btn') elements.previewModal.classList.remove('active');
+        });
+        elements.previewModal.addEventListener('copy', (e) => {
+            const previewText = document.getElementById('preview-text');
+            const selection = window.getSelection();
+            if (!previewText || !selection || !selection.toString()) return;
+            if (!previewText.contains(selection.anchorNode) || !previewText.contains(selection.focusNode)) return;
+            e.preventDefault();
+            e.clipboardData.setData('text/plain', selection.toString());
         });
         
         elements.imageUploadModal.addEventListener('click', (e) => {
