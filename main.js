@@ -1932,10 +1932,19 @@ document.addEventListener('DOMContentLoaded', () => {
             appData.pdfFilenameFormat = appData.pdfFilenameFormat.replace(new RegExp(escapeRegExp(`{{${oldHeader}}}`), 'g'), `{{${newHeader}}}`);
         }
 
-        appData.templates = (appData.templates || []).map(t => ({
-            ...t,
-            content: t && typeof t.content === 'string' ? t.content.replace(new RegExp(escapeRegExp(`{{${oldHeader}}}`), 'g'), `{{${newHeader}}}`) : t.content,
-        }));
+        appData.templates = (appData.templates || []).map(t => {
+            if (!t) return t;
+            const textPlaceholderPattern = new RegExp(escapeRegExp(`{{${oldHeader}}}`), 'g');
+            const imagePlaceholderPattern = new RegExp(escapeRegExp(`{{IMAGEN:${oldHeader}}}`), 'g');
+            return {
+                ...t,
+                content: typeof t.content === 'string'
+                    ? t.content.replace(textPlaceholderPattern, `{{${newHeader}}}`).replace(imagePlaceholderPattern, `{{IMAGEN:${newHeader}}}`)
+                    : t.content,
+                manualFields: (t.manualFields || []).map(field => field === oldHeader ? newHeader : field),
+                imageFields: (t.imageFields || []).map(field => field === oldHeader ? newHeader : field)
+            };
+        });
 
         appData.filters = (appData.filters || []).map(filter => ({
             ...filter,
@@ -2864,16 +2873,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 pendingPDFGeneration = null;
             }
             if (e.target.id === 'submit-image-upload-btn') {
-                const form = document.getElementById('image-upload-form');
-                const imageFields = getUsedImageFields(
-                    pendingPDFGeneration?.template.content,
-                    pendingPDFGeneration?.template.imageFields
-                );
-                const allImagesUploaded = imageFields.every(fieldName => {
-                    const images = pendingPDFGeneration.uploadedImages[fieldName];
-                    return Array.isArray(images) && images.length > 0;
-                });
-                if (form.checkValidity() && allImagesUploaded) {
+                if (pendingPDFGeneration) {
                     const manualVars = pendingPDFGeneration.template.manualFields || [];
                     if (manualVars.length > 0) {
                         elements.imageUploadModal.classList.remove('active');
@@ -2881,8 +2881,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         processAndShowPreview();
                     }
-                } else {
-                    showToast('Por favor, adjunta todas las imágenes requeridas.', 'warning');
                 }
             }
         });
