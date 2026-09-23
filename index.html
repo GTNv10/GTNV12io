@@ -57,9 +57,10 @@
                         <button id="manage-cols-btn" title="Gestionar Columnas" class="flex items-center gap-2 bg-purple-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-purple-600">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2z"></path></svg> Columnas
                         </button>
-                        <button id="manage-db-btn" title="Gestionar Bases de Datos y Ajustes" class="flex items-center gap-2 bg-indigo-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-indigo-600">
+                        <button id="manage-db-btn" title="Abrir configuración" class="flex items-center gap-2 bg-indigo-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-indigo-600">
                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3zM3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7zM17 5c0 1.657-3.134 3-7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"></path></svg> BD/Ajustes
-                        </button>
+                                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 20 20"><path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134-3 7 3s-7-1.343-7-3zM3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134-3 7-3S3 5.343 3 7zM17 5c0 1.657-3.134-3 7 3S3 6.657 3 5s3.134-3 7-3 7 1.343 7 3z"></path></svg> Configuración
+                                </button>
                     </div>
                 </div>
 
@@ -80,18 +81,21 @@
                 </div>
                 
                  <div class="lg:col-span-1 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
-                    <h3 class="font-semibold text-sm mb-2 text-gray-600 dark:text-gray-400">Importar / Exportar</h3>
+                    <h3 class="font-semibold text-sm mb-2 text-gray-600 dark:text-gray-400">Datos</h3>
                      <div class="flex flex-wrap gap-2">
                         <input type="file" id="import-all-input" class="hidden" accept=".json">
-                        <button id="import-all-btn" title="Importar Backup Completo" class="flex items-center gap-2 bg-gray-600 text-white font-semibold py-2 px-3 rounded-lg hover:bg-gray-700">
+                        <button id="import-all-btn" title="Importar copia de seguridad" class="flex items-center gap-2 bg-gray-600 text-white font-semibold py-2 px-3 rounded-lg hover:bg-gray-700">
                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                        </button>
-                        <button id="export-all-btn" title="Exportar Backup Completo" class="flex items-center gap-2 bg-gray-700 text-white font-semibold py-2 px-3 rounded-lg hover:bg-black">
+                                 Importar
+                                </button>
+                                <button id="export-all-btn" title="Exportar copia de seguridad" class="flex items-center gap-2 bg-gray-700 text-white font-semibold py-2 px-3 rounded-lg hover:bg-black">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        </button>
-                        <button id="export-excel-btn" title="Exportar Vista Actual a Excel" class="flex items-center gap-2 bg-green-800 text-white font-semibold py-2 px-3 rounded-lg hover:bg-green-900">
+                                    Exportar respaldo
+                                </button>
+                                <button id="export-excel-btn" title="Exportar vista actual a Excel" class="flex items-center gap-2 bg-green-800 text-white font-semibold py-2 px-3 rounded-lg hover:bg-green-900">
                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 2a2 2 0 012-2h12a2 2 0 012 2v16a2 2 0 01-2 2H4a2 2 0 01-2-2V2zm9.293 4.293a1 1 0 011.414 0l2 2a1 1 0 01-1.414 1.414L11 7.414V13a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414-1.414l2-2a1 1 0 010-1.414z"></path></svg>
-                        </button>
+                           Excel
+                                </button>
                     </div>
                 </div>
             </div>

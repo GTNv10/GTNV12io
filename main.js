@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.manualVarsModal.innerHTML = `<div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto"><h3 class="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">Completar Datos Manuales</h3><form id="manual-vars-form" class="space-y-4"></form><div class="mt-8 flex justify-end space-x-3"><button id="cancel-manual-vars-btn" class="bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 font-bold py-3 px-6 rounded-lg">Cancelar</button><button id="submit-manual-vars-btn" class="bg-sky-600 text-white font-bold py-3 px-6 rounded-lg">Continuar</button></div></div>`;
         elements.previewModal.innerHTML = `<div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto"><h3 class="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">Previsualizar y Generar PDF</h3><pre id="preview-text" class="whitespace-pre-wrap text-sm max-h-72 overflow-y-auto bg-white text-gray-900 p-4 rounded border border-gray-300 font-sans leading-relaxed" style="background-color:#ffffff;color:#111827;"></pre><div class="mt-8 flex justify-end space-x-3"><button id="cancel-preview-btn" class="bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 font-bold py-3 px-6 rounded-lg">Cancelar</button><button id="download-pdf-btn" class="bg-green-500 text-white font-bold py-3 px-6 rounded-lg">Descargar PDF</button></div></div>`;
         
-        elements.dbModal.innerHTML = `<div class="modal-content bg-white dark:bg-gray-800 w-screen h-screen max-w-none max-h-none rounded-none shadow-2xl p-6 flex flex-col"><div class="flex justify-between items-center mb-4 pb-4 border-b dark:border-gray-700"><h3 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Gestionar Bases de Datos y Ajustes</h3><div class="flex items-center gap-4"><button id="export-db-btn" class="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600">Exportar BD (JSON)</button><button id="close-db-btn" class="text-4xl text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400">&times;</button></div></div><div id="db-tables-container" class="flex-grow overflow-y-auto pr-4 grid grid-cols-1 lg:grid-cols-2 gap-8"></div></div>`;
+        elements.dbModal.innerHTML = `<div class="modal-content bg-white dark:bg-gray-800 w-screen h-screen max-w-none max-h-none rounded-none shadow-2xl p-6 flex flex-col"><div class="flex justify-between items-center mb-4 pb-4 border-b dark:border-gray-700"><h3 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Configuración de datos</h3><div class="flex items-center gap-4"><button id="export-db-btn" class="bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600">Exportar respaldo</button><button id="close-db-btn" class="text-4xl text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400">&times;</button></div></div><div id="db-tables-container" class="flex-grow overflow-y-auto pr-4 grid grid-cols-1 lg:grid-cols-2 gap-8"></div></div>`;
         
         elements.columnsModal.innerHTML = `<div class="modal-content bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-5xl max-h-[90vh] flex flex-col"><div class="flex justify-between items-center mb-6"><h3 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Gestionar Columnas</h3><div><button id="add-col-btn" class="bg-sky-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-sky-600 mr-2">Añadir Columna</button><button id="delete-col-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 disabled:bg-gray-400" disabled>Eliminar Seleccionada</button></div></div><div id="column-key-settings" class="mb-4 p-3 bg-indigo-50 dark:bg-indigo-900/50 rounded-lg"></div><div class="flex-grow overflow-y-auto pr-4 space-y-2" id="columns-list"></div><div class="mt-8 pt-4 border-t dark:border-gray-700 flex justify-end"><button id="close-columns-btn" class="bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-200 font-bold py-3 px-6 rounded-lg">Cerrar</button></div></div>`;
     
@@ -2038,7 +2038,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const listColumns = appData.headers.filter(h => appData.columnFormats[h] === 'list');
         
         // --- SECCIÓN: Identificador de Fila ---
-        const identifierSection = createSection('Identificador de Fila Seleccionada');
+        const identifierSection = createSection('Identificador de fila');
         const identifierLabel = document.createElement('label');
         identifierLabel.className = 'flex items-center gap-3 text-sm';
         identifierLabel.innerHTML = `<span class="font-semibold text-gray-700 dark:text-gray-300">Usar valor de columna:</span>`;
@@ -2056,7 +2056,7 @@ document.addEventListener('DOMContentLoaded', () => {
         leftCol.appendChild(identifierSection);
 
         // --- SECCIÓN: Codificación de Color ---
-        const colorCodingSection = createSection('Codificación de Color por Columna (solo listas)');
+        const colorCodingSection = createSection('Colores de filas');
         const colorCodingLabel = document.createElement('label');
         colorCodingLabel.className = 'flex items-center gap-3 text-sm';
         colorCodingLabel.innerHTML = `<span class="font-semibold text-gray-700 dark:text-gray-300">Colorear filas según:</span>`;
@@ -2098,7 +2098,7 @@ document.addEventListener('DOMContentLoaded', () => {
         leftCol.appendChild(colorCodingSection);
 
         // --- SECCIÓN: Eliminación Rápida ---
-        const bulkDeleteSection = createSection('Eliminación Rápida por Columna (solo listas)');
+        const bulkDeleteSection = createSection('Eliminar registros por lista');
         const bulkDeleteLabel = document.createElement('label');
         bulkDeleteLabel.className = 'flex items-center gap-3 text-sm';
         bulkDeleteLabel.innerHTML = `<span class="font-semibold text-gray-700 dark:text-gray-300">Eliminar filas según:</span>`;
@@ -2173,7 +2173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         leftCol.appendChild(bulkDeleteSection);
         
         // --- SECCIÓN: Valores Ocultos ---
-        const hideSettingsSection = createSection('Valores Ocultos por Defecto (solo listas)');
+        const hideSettingsSection = createSection('Ocultar valores por defecto');
         const hideSettingsLabel = document.createElement('label');
         hideSettingsLabel.className = 'flex items-center gap-3 text-sm';
         hideSettingsLabel.innerHTML = `<span class="font-semibold text-gray-700 dark:text-gray-300">Ocultar valores de:</span>`;
@@ -2222,7 +2222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rightCol.appendChild(hideSettingsSection);
 
         // --- SECCIÓN: Alertas Visuales ---
-        const alertsSection = createSection('Alertas Visuales por Vencimiento (DIAS)');
+        const alertsSection = createSection('Alertas de fechas');
         const alertsTable = document.createElement('table'); alertsTable.className = 'w-full text-sm';
         alertsTable.innerHTML = `<thead class="border-b dark:border-gray-700 text-gray-700 dark:text-gray-300 text-center"><th class="p-2 text-left">Activo</th><th class="p-2">Fondo</th><th class="p-2">Texto</th><th class="p-2">Condición</th><th class="p-2">Valor</th><th class="p-2"></th></thead>`;
         const alertsTbody = document.createElement('tbody');
@@ -2248,7 +2248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         rightCol.appendChild(alertsSection);
         
         // --- Otras secciones (visualización, pdf, lookups, etc.) ---
-        const visualSettingsSection = createSection('Ajustes de Visualización');
+        const visualSettingsSection = createSection('Visualización de la tabla');
         const rowsPerPageLabel = document.createElement('label');
         rowsPerPageLabel.className = 'flex items-center gap-3 text-sm';
         rowsPerPageLabel.innerHTML = `<span class="font-semibold text-gray-700 dark:text-gray-300">Filas por página:</span>`;
@@ -2270,7 +2270,7 @@ document.addEventListener('DOMContentLoaded', () => {
         visualSettingsSection.appendChild(rowsPerPageLabel);
         leftCol.appendChild(visualSettingsSection);
 
-        const pdfFilenameSection = createSection('Formato de Nombre para Archivos PDF');
+        const pdfFilenameSection = createSection('Nombre de los archivos PDF');
         const filenameHelp = document.createElement('p');
         filenameHelp.className = 'text-xs text-gray-500 dark:text-gray-400 -mt-2';
         filenameHelp.textContent = 'Define cómo se nombrarán los archivos PDF. Usa las variables de abajo.';
@@ -2301,7 +2301,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pdfFilenameSection.appendChild(filenamePlaceholders);
         leftCol.appendChild(pdfFilenameSection);
 
-        const lookupSection = createSection('Búsquedas Automáticas (VLOOKUP)');
+        const lookupSection = createSection('Búsquedas automáticas');
         (appData.lookupRelations || []).forEach(rel => {
             const relContainer = document.createElement('div'); relContainer.className = 'p-3 my-2 bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600';
             const relHeader = document.createElement('div'); relHeader.className = 'flex justify-between items-center mb-2';
@@ -2885,6 +2885,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        elements.manageDbBtn.textContent = 'Configuración';
         elements.manageDbBtn.addEventListener('click', openDbModal);
         elements.dbModal.addEventListener('click', (e) => {
             const section = e.target.closest('.db-section');
