@@ -870,7 +870,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const colorCol = appData.colorCodingColumn;
         if (!colorCol) return;
 
-        const counts = filteredData.reduce((acc, row) => {
+        const hideSettings = appData.hideSettings;
+        const summaryRows = hideSettings?.column && hideSettings.hiddenValues?.length
+            ? filteredData.filter(row => !hideSettings.hiddenValues.includes(row[hideSettings.column]))
+            : filteredData;
+        const counts = summaryRows.reduce((acc, row) => {
             const value = row[colorCol] || `Sin ${colorCol}`;
             acc[value] = (acc[value] || 0) + 1;
             return acc;
@@ -881,19 +885,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const colorDb = appData.referenceDB[colorDbKey];
 
         Object.entries(counts).forEach(([value, count]) => {
-            const span = document.createElement('span');
-            span.className = 'text-xs px-2 py-1 rounded-full font-bold';
+            const isEmptyValue = value === `Sin ${colorCol}`;
+            const isActive = (appData.filters || []).some(filter => filter.column === colorCol && filter.value === value);
+            const chip = document.createElement(isEmptyValue ? 'span' : 'button');
+            chip.className = `text-xs px-2 py-1 rounded-full font-bold ${isEmptyValue ? '' : `cursor-pointer focus:outline-none focus:ring-2 focus:ring-sky-500 ${isActive ? 'ring-2 ring-offset-1 ring-slate-700 dark:ring-white' : ''}`}`;
+            if (!isEmptyValue) {
+                chip.type = 'button';
+                chip.setAttribute('aria-pressed', String(isActive));
+                chip.title = `Filtrar por ${value}`;
+            }
             
             const colorConfig = colorDb ? (colorDb[value] || colorDb['__DEFAULT__']) : null;
             if(colorConfig) {
-                span.style.backgroundColor = colorConfig.background;
-                span.style.color = colorConfig.text;
+                chip.style.backgroundColor = colorConfig.background;
+                chip.style.color = colorConfig.text;
             } else {
-                 span.style.backgroundColor = theme === 'dark' ? '#374151' : '#e5e7eb';
-                 span.style.color = theme === 'dark' ? '#d1d5db' : '#374151';
+                 chip.style.backgroundColor = theme === 'dark' ? '#374151' : '#e5e7eb';
+                 chip.style.color = theme === 'dark' ? '#d1d5db' : '#374151';
             }
-            span.textContent = `${value}: ${count}`;
-            bar.appendChild(span);
+            chip.textContent = `${value}: ${count}`;
+            if (!isEmptyValue) chip.onclick = () => {
+                const wasActive = (appData.filters || []).some(filter => filter.column === colorCol && filter.value === value);
+                appData.filters = (appData.filters || []).filter(filter => filter.column !== colorCol);
+                if (!wasActive) appData.filters.push({ column: colorCol, condition: '=', value });
+                currentPage = 1;
+                saveData();
+                renderFilters();
+                sortAndApplyFilters();
+            };
+            bar.appendChild(chip);
         });
     }
     
@@ -921,7 +941,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const rowData = appData.mainData.find(r => r.id === selectedRowId);
             if (rowData) {
                 const identifierValue = rowData[idColumn] || 'N/A';
-                display.innerHTML = `<span class="font-medium">Seleccionado:</span> <span class="font-extrabold">${identifierValue}</span>`;
+                display.innerHTML = `<span class="min-w-0 truncate"><span class="font-medium">Seleccionado:</span> <span class="font-extrabold">${identifierValue}</span></span><button type="button" class="shrink-0 rounded px-1 text-sky-700 hover:bg-sky-200 dark:text-sky-200 dark:hover:bg-sky-800" title="Quitar selección" aria-label="Quitar selección">&times;</button>`;
+                display.classList.remove('text-center');
+                display.classList.add('flex', 'items-center', 'justify-between', 'gap-2');
+                display.querySelector('button').onclick = () => {
+                    selectedRowId = null;
+                    renderTable();
+                    updateSelectionStatus();
+                };
                 display.title = `${idColumn}: ${identifierValue}`;
                 display.style.display = 'block';
             } else {
@@ -2370,6 +2397,11 @@ document.addEventListener('DOMContentLoaded', () => {
             else { return; }
 
             const section = createSection(config.title, dbKey);
+            const addBtn = document.createElement('button'); 
+            addBtn.className = "mt-2 text-sm text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300"; 
+            addBtn.textContent = `+ Añadir a ${config.title}`;
+            addBtn.onclick = () => addDbEntry(dbKey, config); 
+            section.appendChild(addBtn);
             const table = document.createElement('table'); table.className = 'w-full text-sm';
             const thead = document.createElement('thead'); thead.className = 'border-b dark:border-gray-700 text-gray-700 dark:text-gray-300';
             let headerCells = config.fields.map(f => {
@@ -2403,11 +2435,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 tbody.appendChild(tr);
             });
             table.appendChild(tbody); section.appendChild(table);
-            const addBtn = document.createElement('button'); 
-            addBtn.className = "mt-2 text-sm text-sky-600 dark:text-sky-400 hover:text-sky-800 dark:hover:text-sky-300"; 
-            addBtn.textContent = `+ Añadir a ${config.title}`;
-            addBtn.onclick = () => addDbEntry(dbKey, config); 
-            section.appendChild(addBtn);
             
             if (dbKey.startsWith('_lookup_')) { rightCol.appendChild(section); } 
             else { leftCol.appendChild(section); }
