@@ -44,8 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingOverlay: document.getElementById('loading-overlay'),
         increaseFontSizeBtn: document.getElementById('increase-font-size'),
         decreaseFontSizeBtn: document.getElementById('decrease-font-size'),
-        tableFontColorPicker: document.getElementById('table-font-color-picker'),
         selectedRowIdentifierDisplay: document.getElementById('selected-row-identifier-display'),
+        selectedRowFilterDisplay: document.getElementById('selected-row-filter-display'),
         promptModal: null,
         confirmModal: null,
     };
@@ -119,7 +119,30 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
-    const calculateDays = (dateStr) => { const date = parseDate(dateStr); if (!date) return ''; const today = new Date(); const todayUTC = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())); return Math.ceil((date - todayUTC) / (1000 * 60 * 60 * 24)) * -1; };
+    const calculateDays = (dateStr) => {
+        const date = parseDate(dateStr);
+        if (!date) return '';
+        const today = new Date();
+        const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+        const dateTime = date.getTime();
+        const dayInMs = 1000 * 60 * 60 * 24;
+
+        if (appData.dayCountMode !== 'business') {
+            return Math.ceil((dateTime - todayUTC) / dayInMs) * -1;
+        }
+
+        const direction = dateTime < todayUTC ? 1 : -1;
+        const start = Math.min(dateTime, todayUTC);
+        const end = Math.max(dateTime, todayUTC);
+        let workingDays = 0;
+
+        for (let day = start + dayInMs; day <= end; day += dayInMs) {
+            const weekday = new Date(day).getUTCDay();
+            if (weekday !== 0 && weekday !== 6) workingDays++;
+        }
+
+        return workingDays * direction;
+    };
     function formatCuitCuil(value) { if (!value) return ''; const cleaned = String(value).replace(/[^0-9]/g, ''); if (cleaned.length !== 11) return value; return `${cleaned.substring(0, 2)}-${cleaned.substring(2, 10)}-${cleaned.substring(10)}`; }
     
     // ### DATA MANAGEMENT ###
@@ -210,6 +233,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         appData.keyColumns.dateForCalculation = foundDateCol || null;
                         appData.keyColumns.daysDisplay = foundDaysCol || null;
                     }
+                    if (appData.dayCountMode !== 'business' && appData.dayCountMode !== 'calendar') {
+                        appData.dayCountMode = 'calendar';
+                    }
                     normalizeColorDatabase();
                     // --- End Data Migration ---
                     return;
@@ -242,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dateForCalculation: 'FECHA ULTIMA/ PROXIMA ACCION',
                 daysDisplay: 'DIAS'
             },
+            dayCountMode: 'calendar',
             columnMetadata: {
                 "DIAS": { isProtected: true }
             },
@@ -625,12 +652,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (format === 'list') {
                         const listKey = `_list_${header}`;
                         const options = getSortedListKeys(listKey);
+                        const listCell = document.createElement('div');
+                        listCell.className = 'list-cell-control';
+                        const selectedValue = document.createElement('span');
+                        selectedValue.className = 'list-cell-value';
+                        selectedValue.textContent = value;
+                        selectedValue.setAttribute('aria-hidden', 'true');
                         const select = document.createElement('select');
-                        select.className = "w-full h-full p-3 bg-transparent border-0 focus:ring-0 text-center";
+                        select.className = 'list-cell-select';
+                        select.setAttribute('aria-label', `${header}: ${value || 'sin seleccionar'}`);
                         select.innerHTML = `<option value=""></option>` + options.map(opt => `<option value="${opt}" ${value === opt ? 'selected' : ''}>${opt}</option>`).join('');
-                        select.onchange = (e) => handleCellUpdate(row.id, header, e.target.value);
-                        select.style.color = 'inherit';
-                        td.appendChild(select);
+                        select.onchange = (e) => {
+                            selectedValue.textContent = e.target.selectedOptions[0]?.textContent || '';
+                            select.setAttribute('aria-label', `${header}: ${e.target.value || 'sin seleccionar'}`);
+                            handleCellUpdate(row.id, header, e.target.value);
+                        };
+                        listCell.append(selectedValue, select);
+                        td.appendChild(listCell);
                     } else if (format === 'date') {
                         const input = createDateInputComponent(value, (newValue) => {
                             handleCellUpdate(row.id, header, newValue);
@@ -933,29 +971,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateSelectedRowIdentifierDisplay() {
         const display = elements.selectedRowIdentifierDisplay;
-        if (!display) return;
-        
+        const filterDisplay = elements.selectedRowFilterDisplay;
         const idColumn = appData.selectedRowIdentifierColumn;
 
         if (selectedRowId && idColumn && appData.headers.includes(idColumn)) {
             const rowData = appData.mainData.find(r => r.id === selectedRowId);
             if (rowData) {
                 const identifierValue = rowData[idColumn] || 'N/A';
-                display.innerHTML = `<span class="min-w-0 truncate"><span class="font-medium">Seleccionado:</span> <span class="font-extrabold">${identifierValue}</span></span><button type="button" class="shrink-0 rounded px-1 text-sky-700 hover:bg-sky-200 dark:text-sky-200 dark:hover:bg-sky-800" title="Quitar selección" aria-label="Quitar selección">&times;</button>`;
-                display.classList.remove('text-center');
-                display.classList.add('flex', 'items-center', 'justify-between', 'gap-2');
-                display.querySelector('button').onclick = () => {
-                    selectedRowId = null;
-                    renderTable();
-                    updateSelectionStatus();
+                const updateDisplay = (target) => {
+                    if (!target) return;
+                    target.replaceChildren();
+                    const label = document.createElement('span');
+                    label.className = 'selected-row-label';
+                    label.textContent = 'Seleccionado:';
+                    const value = document.createElement('span');
+                    value.className = 'selected-row-value';
+                    value.textContent = identifierValue;
+                    const clearButton = document.createElement('button');
+                    clearButton.type = 'button';
+                    clearButton.className = 'selected-row-clear';
+                    clearButton.textContent = '×';
+                    clearButton.title = 'Quitar selección';
+                    clearButton.setAttribute('aria-label', 'Quitar selección');
+                    clearButton.onclick = () => {
+                        selectedRowId = null;
+                        renderTable();
+                        updateSelectionStatus();
+                    };
+                    target.append(label, value, clearButton);
+                    target.title = `${idColumn}: ${identifierValue}`;
+                    target.style.display = 'flex';
                 };
-                display.title = `${idColumn}: ${identifierValue}`;
-                display.style.display = 'block';
+
+                if (display) {
+                    updateDisplay(display);
+                    display.classList.remove('text-center');
+                    display.classList.add('flex', 'items-center', 'justify-between', 'gap-2');
+                }
+                if (filterDisplay) {
+                    updateDisplay(filterDisplay);
+                }
             } else {
-                display.style.display = 'none';
+                if (display) display.style.display = 'none';
+                if (filterDisplay) filterDisplay.style.display = 'none';
             }
         } else {
-            display.style.display = 'none';
+            if (display) display.style.display = 'none';
+            if (filterDisplay) filterDisplay.style.display = 'none';
         }
     }
     
@@ -1760,6 +1822,27 @@ document.addEventListener('DOMContentLoaded', () => {
         
         keyColLabel.appendChild(keyColSelect);
         keySettingsContainer.appendChild(keyColLabel);
+
+        const dayCountLabel = document.createElement('label');
+        dayCountLabel.className = 'flex items-center gap-2 mt-3 text-sm';
+        dayCountLabel.innerHTML = `<span class="font-semibold text-gray-700 dark:text-gray-300">Contar días como:</span>`;
+
+        const dayCountSelect = document.createElement('select');
+        dayCountSelect.className = 'p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700';
+        dayCountSelect.innerHTML = `
+            <option value="calendar" ${appData.dayCountMode !== 'business' ? 'selected' : ''}>Días corridos (incluye fines de semana)</option>
+            <option value="business" ${appData.dayCountMode === 'business' ? 'selected' : ''}>Días hábiles (lunes a viernes)</option>
+        `;
+        dayCountSelect.onchange = (e) => {
+            appData.dayCountMode = e.target.value === 'business' ? 'business' : 'calendar';
+            recalculateAllDays();
+            saveData();
+            sortAndApplyFilters();
+            showToast(`Conteo actualizado a ${appData.dayCountMode === 'business' ? 'días hábiles' : 'días corridos'}.`, 'success');
+        };
+
+        dayCountLabel.appendChild(dayCountSelect);
+        keySettingsContainer.appendChild(dayCountLabel);
 
         appData.headers.forEach((header, index) => {
             const item = document.createElement('div');
@@ -2826,12 +2909,6 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.increaseFontSizeBtn.addEventListener('click', () => changeFontSize(1));
         elements.decreaseFontSizeBtn.addEventListener('click', () => changeFontSize(-1));
 
-        elements.tableFontColorPicker.addEventListener('input', (e) => {
-            appData.tableTextColor = e.target.value;
-            elements.tableContainer.style.setProperty('--table-text-color', appData.tableTextColor);
-            saveData();
-        });
-
 
         elements.manageColsBtn.addEventListener('click', openColumnsModal);
         elements.columnsModal.addEventListener('click', (e) => { 
@@ -2968,7 +3045,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setupEventListeners();
         recalculateAllDays(); 
         applyTheme(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        elements.tableFontColorPicker.value = appData.tableTextColor === 'inherit' ? '#000000' : appData.tableTextColor;
         updateSelectedRowIdentifierDisplay();
         console.log("GTN v10 (Modificado) inicializado.");
         
